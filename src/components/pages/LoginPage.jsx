@@ -12,6 +12,10 @@ import {
 import { Truck, Loader2, AlertCircle } from 'lucide-react';
 import { login as apiLogin } from '../../services/api';
 
+/**
+ * LoginPage
+ * Supports OWNER, SUPERVISOR, FLEET
+ */
 export function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,21 +28,28 @@ export function LoginPage({ onLogin }) {
     setError('');
     setLoading(true);
 
+    /* ---------------- DEMO MODE ---------------- */
     if (useDemo) {
       setTimeout(() => {
-        if (email.includes('owner')) onLogin('owner');
-        else if (email.includes('supervisor')) onLogin('supervisor');
+        if (email.includes('owner')) onLogin('OWNER');
+        else if (email.includes('supervisor')) onLogin('SUPERVISOR');
+        else if (email.includes('fleet')) onLogin('FLEET');
         else setError('Invalid demo credentials');
         setLoading(false);
-      }, 600);
+      }, 500);
       return;
     }
 
+    /* ---------------- REAL LOGIN ---------------- */
     try {
       const response = await apiLogin(email, password);
-      if (response.user) {
-        onLogin(response.user.role || 'supervisor');
+
+      if (!response?.user?.role) {
+        throw new Error('Invalid login response');
       }
+
+      // Pass role + full user object upward
+      onLogin(response.user.role, response.user);
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -47,7 +58,7 @@ export function LoginPage({ onLogin }) {
   };
 
   const fillDemo = (role) => {
-    setEmail(`${role}@fleet.com`);
+    setEmail(`${role.toLowerCase()}@fleet.com`);
     setPassword('password123');
   };
 
@@ -112,7 +123,7 @@ export function LoginPage({ onLogin }) {
               )}
             </Button>
 
-            {/* Demo Section */}
+            {/* DEMO MODE */}
             <div className="border-t border-slate-200 pt-4 space-y-3">
               <div className="flex items-center justify-between text-xs text-slate-500">
                 <span>Demo access (no backend)</span>
@@ -127,22 +138,27 @@ export function LoginPage({ onLogin }) {
               </div>
 
               {useDemo && (
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
-                    onClick={() => fillDemo('owner')}
+                    onClick={() => fillDemo('OWNER')}
                   >
-                    Owner Demo
+                    Owner
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
-                    onClick={() => fillDemo('supervisor')}
+                    onClick={() => fillDemo('SUPERVISOR')}
                   >
-                    Supervisor Demo
+                    Supervisor
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fillDemo('FLEET')}
+                  >
+                    Fleet
                   </Button>
                 </div>
               )}

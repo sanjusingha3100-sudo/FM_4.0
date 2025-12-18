@@ -25,9 +25,16 @@ import { ComplaintsPanel } from './supervisor/ComplaintsPanel.jsx';
 import { GeofencingPage } from './supervisor/GeofencingPage.jsx';
 import { VehicleTracking } from './supervisor/VehicleTracking.jsx';
 
+/* =========================
+   FLEET
+========================= */
+import FleetLayout from './Fleet/FleetLayout.jsx';
+import FleetDashboard from './Fleet/FleetDashboard.jsx';
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [user, setUser] = useState(null);
 
   /* page state is ROLE-SCOPED */
   const [currentPage, setCurrentPage] = useState(null);
@@ -35,17 +42,19 @@ export default function App() {
   /* =========================
      AUTH HANDLERS
   ========================= */
-  const handleLogin = (role) => {
+  const handleLogin = (role, userData = null) => {
     setUserRole(role);
+    setUser(userData);
     setIsLoggedIn(true);
 
     // default landing page per role
-    setCurrentPage(role === 'owner' ? 'dashboard' : 'dashboard');
+    setCurrentPage('dashboard');
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserRole(null);
+    setUser(null);
     setCurrentPage(null);
   };
 
@@ -63,7 +72,7 @@ export default function App() {
   /* =========================
      OWNER PORTAL
   ========================= */
-  if (userRole === 'owner') {
+  if (userRole === 'OWNER') {
     let page = <OwnerDashboard />;
 
     switch (currentPage) {
@@ -100,6 +109,7 @@ export default function App() {
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onLogout={handleLogout}
+        user={user}
       >
         {page}
       </OwnerLayout>
@@ -109,7 +119,7 @@ export default function App() {
   /* =========================
      SUPERVISOR PORTAL
   ========================= */
-  if (userRole === 'supervisor') {
+  if (userRole === 'SUPERVISOR') {
     let page = <SupervisorDashboard />;
 
     switch (currentPage) {
@@ -140,11 +150,21 @@ export default function App() {
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onLogout={handleLogout}
+        user={user}
       >
         {page}
       </SupervisorLayout>
     );
   }
+
+  /* =========================
+     FLEET PORTAL
+  ========================= */
+  
+  if (userRole === 'FLEET') {
+  return <FleetDashboard onLogout={handleLogout} />;
+}
+
 
   return null;
 }
