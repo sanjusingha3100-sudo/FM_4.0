@@ -85,7 +85,7 @@ export default function FleetDashboard({ onLogout }) {
           onClick={() => setActiveTab('settings')}
           className={activeTab === 'settings' ? 'text-blue-600 underline' : ''}
         >
-          Settings
+          ttings
         </button>
       </div>
 
