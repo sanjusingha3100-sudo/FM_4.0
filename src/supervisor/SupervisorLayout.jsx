@@ -20,7 +20,7 @@ import { FuelEntry } from './FuelEntry.jsx';
 import { LiveTracking } from './LiveTracking.jsx';
 import { VehicleTracking } from './VehicleTracking.jsx';
 import { ComplaintsPanel } from './ComplaintsPanel.jsx';
-import { GeofencingPage } from './GeofencingPage.jsx';
+import GeofencingPage  from './GeofencingPage.jsx';
 
 /**
  * SupervisorLayout (TOP HEADER)
@@ -128,8 +128,12 @@ export function SupervisorLayout({ onLogout, user }) {
         </div>
       </header>
 
-      {/* ================= MAIN CONTENT ================= */}
-      <main className="flex-1 overflow-auto bg-slate-50 p-6">
+      {/* ================= MAIN CONTENT ================= 
+     
+      <main className="flex-1 overflow-auto bg-slate-50 p-6">*/}
+     
+     <main className="flex-1 overflow-hidden bg-slate-50">
+
         {renderPage()}
       </main>
     </div>

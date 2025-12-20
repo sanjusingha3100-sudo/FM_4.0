@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   LayoutDashboard,
   Droplet,
@@ -9,19 +10,27 @@ import {
   LogOut,
   User,
 } from 'lucide-react';
+
 import { Button } from '../components/ui/button.jsx';
+
+/* =========================
+   OWNER PAGES
+========================= */
+import OwnerDashboard from './OwnerDashboard.jsx';
+import { FuelAnalysis } from './FuelAnalysis.jsx';
+import { SLAReports } from './SLAReports.jsx';
+import { RiskInsights } from './RiskInsights.jsx';
+import { Penalties } from './Penalties.jsx';
+import { FuelReports } from './FuelReports.jsx';
+import { Settings } from './Settings.jsx';
 
 /**
  * OwnerLayout
  * Executive / decision-making layout
- * NO live tracking, NO operational controls
  */
-export function OwnerLayout({
-  children,
-  onLogout,
-  onNavigate,
-  currentPage,
-}) {
+export function OwnerLayout({ onLogout, user }) {
+  const [currentPage, setCurrentPage] = useState('dashboard');
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'fuel-analysis', label: 'Fuel Analysis', icon: Droplet },
@@ -31,6 +40,26 @@ export function OwnerLayout({
     { id: 'penalties', label: 'Penalties', icon: AlertTriangle },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'fuel-analysis':
+        return <FuelAnalysis />;
+      case 'fuel-reports':
+        return <FuelReports />;
+      case 'sla-reports':
+        return <SLAReports />;
+      case 'risk-insights':
+        return <RiskInsights />;
+      case 'penalties':
+        return <Penalties />;
+      case 'settings':
+        return <Settings />;
+      case 'dashboard':
+      default:
+        return <OwnerDashboard />;
+    }
+  };
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden">
@@ -66,7 +95,7 @@ export function OwnerLayout({
             return (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => setCurrentPage(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                   isActive
                     ? 'bg-emerald-600 text-white'
@@ -90,7 +119,7 @@ export function OwnerLayout({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                Fleet Owner
+                {user?.name || 'Fleet Owner'}
               </p>
               <p className="text-xs text-slate-400 truncate">
                 Administrator
@@ -110,10 +139,8 @@ export function OwnerLayout({
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
-      <main className="flex-1 overflow-y-auto bg-slate-50">
-        <div className="p-8">
-          {children}
-        </div>
+      <main className="flex-1 overflow-auto bg-slate-50 p-8">
+        {renderPage()}
       </main>
     </div>
   );

@@ -92,6 +92,13 @@ export const login = async (email, password) => {
   return data;
 };
 
+
+export const getOwnerDashboard = async () => {
+  const { data } = await apiClient.get('/owner/dashboard');
+  return data;
+};
+
+
 export const logout = () => {
   removeToken();
   removeStoredUser();
@@ -181,6 +188,8 @@ const api = {
   getVehicles,
   getLatestTelemetry,
 
+   getOwnerDashboard,
+   
   createFuelEntry,
   runFuelAnalysis,
 
