@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+function zoomByRadius(radius) {
+  if (radius <= 200) return 18;
+  if (radius <= 500) return 16;
+  if (radius <= 1000) return 15;
+  return 14;
+}
 
 /* ======================================================
    MAP CLICK HELPER
@@ -32,22 +38,30 @@ export default function GeofencingPage() {
   const [radius, setRadius] = useState(500);
   const [point, setPoint] = useState(null);
   const [editingId, setEditingId] = useState(null);
+const API_BASE = 'http://localhost:5002';
+const [mapLayer, setMapLayer] = useState('standard');
 
-  /* Shift binding */
-  const [shifts, setShifts] = useState([]);
-  const [shiftId, setShiftId] = useState('');
-  const [expectedTime, setExpectedTime] = useState('');
+const [showAssign, setShowAssign] = useState(false);
+const [selectedGeofence, setSelectedGeofence] = useState(null);
 
+const [vehicles, setVehicles] = useState([]);
+const [vehicleId, setVehicleId] = useState('');
+const [expectedTime, setExpectedTime] = useState('');
+const [graceMinutes, setGraceMinutes] = useState(10);
+
+ 
   /* ======================================================
      INIT MAP
   ====================================================== */
   useEffect(() => {
   if (!window.mappls || mapRef.current) return;
 
-  const map = new window.mappls.Map('geofence-map', {
-    center: [28.61, 77.2],
-    zoom: 6,
-  });
+ const map = new window.mappls.Map('geofence-map', {
+  center: [28.61, 77.2],
+  zoom: 6,
+  layers: mapLayer,
+});
+
 
   mapRef.current = map;
 
@@ -82,7 +96,10 @@ export default function GeofencingPage() {
         setCompanyName(place.placeName || '');
 if (mapRef.current) {
   mapRef.current.setCenter([lat, lng]);
-  mapRef.current.setZoom(16);
+
+// Autosuggest should NOT depend on radius
+mapRef.current.setZoom(16);
+
 }
       },
     });
@@ -94,47 +111,70 @@ if (mapRef.current) {
      LOAD EXISTING GEOFENCES
   ====================================================== */
   const loadCompanies = async () => {
-    const res = await fetch('/api/companies');
+    const res = await fetch(`${API_BASE}/api/companies`);
     if (!res.ok) return;
     const data = await res.json();
     setCompanies(data);
   };
 
+
   useEffect(() => {
     loadCompanies();
   }, []);
 
-  /* ======================================================
-     DRAW GEOFENCE CIRCLES
-  ====================================================== */
-  useEffect(() => {
-    if (!mapRef.current || !window.mappls) return;
 
-    mapRef.current.clearOverlays?.();
+  const loadVehicles = async () => {
+  const res = await fetch(`${API_BASE}/api/vehicles`);
+  if (!res.ok) return;
+  setVehicles(await res.json());
+};
+useEffect(() => {
+  loadVehicles();
+}, []);
+const geofenceCirclesRef = useRef([]);
 
-    companies.forEach((c) => {
-      const m = c.center?.toString().match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
-      if (!m) return;
+useEffect(() => {
+  if (!mapRef.current || !window.mappls) return;
 
-      new window.mappls.Circle({
-        map: mapRef.current,
-        center: [Number(m[2]), Number(m[1])],
-        radius: c.radius_meters,
-        fillOpacity: 0.25,
-        strokeColor: '#2563eb',
-      });
+  // remove old circles
+  geofenceCirclesRef.current.forEach(obj => {
+  if (obj.circle) obj.circle.setMap(null);
+});
+  geofenceCirclesRef.current = [];
+
+  companies.forEach((c) => {
+    const m = c.center?.toString().match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+    if (!m) return;
+
+    const lat = Number(m[2]);
+    const lng = Number(m[1]);
+
+    const circle = new window.mappls.Circle({
+      map: mapRef.current,
+      center: [lat, lng],
+      radius: Number(c.radius_meters),
+      strokeColor: '#2563eb',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#2563eb',
+      fillOpacity: 0.25,
     });
-  }, [companies]);
 
-  /* ======================================================
-     LOAD SHIFTS FOR COMPANY
-  ====================================================== */
-  const loadShifts = async (companyId) => {
-    const res = await fetch(`/api/company-shifts/${companyId}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    setShifts(data);
-  };
+    // ✅ CLICK ON GEOFENCE → ZOOM
+    window.mappls.Event.addListener(circle, 'click', () => {
+  mapRef.current.setCenter([lat, lng]);
+  mapRef.current.setZoom(zoomByRadius(c.radius_meters));
+});
+
+    geofenceCirclesRef.current.push({
+      company_id: c.company_id,
+      circle,
+      lat,
+      lng,
+      radius: c.radius_meters,
+    });
+  });
+}, [companies]);
 
   /* ======================================================
      CREATE / UPDATE GEOFENCE
@@ -150,13 +190,12 @@ if (mapRef.current) {
       center_lat: point.lat,
       center_lng: point.lng,
       radius_meters: radius,
-      expected_time_minutes: expectedTime,
-      shift_id: shiftId,
+    
     };
 
     const url = editingId
-      ? `/api/geofences/${editingId}`
-      : '/api/companies';
+  ? `${API_BASE}/api/geofences/${editingId}`
+  : `${API_BASE}/api/companies`;
 
     const method = editingId ? 'PUT' : 'POST';
 
@@ -281,25 +320,8 @@ if (mapRef.current) {
 
 
             
-            <input
-              type="time"
-              className="w-full border rounded px-3 py-2"
-              value={expectedTime}
-              onChange={(e) => setExpectedTime(e.target.value)}
-            />
-
-            <select
-              className="w-full border rounded px-3 py-2"
-              value={shiftId}
-              onChange={(e) => setShiftId(e.target.value)}
-            >
-              <option value="">Select Shift</option>
-              {shifts.map((s) => (
-                <option key={s.shift_id} value={s.shift_id}>
-                  {s.shift_name} ({s.start_time}–{s.end_time})
-                </option>
-              ))}
-            </select>
+          
+            
 
             <button
               onClick={saveGeofence}
@@ -347,11 +369,12 @@ if (mapRef.current) {
                         const lat = Number(m[2]);
                         const lng = Number(m[1]);
                         setPoint({ lat, lng });
-                        mapRef.current.setCenter([lat, lng]);
-                        mapRef.current.setZoom(16);
+                     mapRef.current.setCenter([lat, lng]);
+                     mapRef.current.setZoom(zoomByRadius(c.radius_meters));
+
                       }
 
-                      loadShifts(c.company_id);
+                      
                     }}
                     className="text-blue-600"
                   >
@@ -364,12 +387,119 @@ if (mapRef.current) {
                   >
                     🗑️
                   </button>
+                  <button
+  onClick={() => {
+    setSelectedGeofence(c);
+    setShowAssign(true);
+  }}
+  className="text-green-600"
+>
+  ➕
+</button>
+<button
+  onClick={() => {
+    const next = mapLayer === 'standard' ? 'satellite' : 'standard';
+    setMapLayer(next);
+
+    mapRef.current.setStyle(
+      next === 'satellite'
+        ? 'mappls://styles/mappls/satellite'
+        : 'mappls://styles/mappls/standard'
+    );
+  }}
+  className="px-3 py-1 border rounded text-sm"
+>
+  🛰️ {mapLayer === 'standard' ? 'Satellite' : 'Standard'}
+</button>
+
+
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+{showAssign && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white w-[420px] rounded-lg p-6">
+      <h2 className="text-lg font-semibold mb-4">
+        Assign Vehicle to Geofence
+      </h2>
+
+      <div className="space-y-4">
+        {/* VEHICLE */}
+        <select
+          className="w-full border rounded px-3 py-2"
+          value={vehicleId}
+          onChange={(e) => setVehicleId(e.target.value)}
+        >
+          <option value="">Select Vehicle</option>
+          {vehicles.map((v) => (
+            <option key={v.vehicle_id} value={v.vehicle_id}>
+              {v.vehicle_number}
+            </option>
+          ))}
+        </select>
+
+        {/* EXPECTED TIME */}
+        <input
+          type="time"
+          className="w-full border rounded px-3 py-2"
+          value={expectedTime}
+          onChange={(e) => setExpectedTime(e.target.value)}
+        />
+
+        {/* GRACE */}
+        <input
+          type="number"
+          className="w-full border rounded px-3 py-2"
+          placeholder="Grace minutes"
+          value={graceMinutes}
+          onChange={(e) => setGraceMinutes(+e.target.value)}
+        />
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setShowAssign(false)}
+            className="px-4 py-2 border rounded"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={async () => {
+              if (!vehicleId || !expectedTime) {
+                alert('Select vehicle & time');
+                return;
+              }
+
+              await fetch(`${API_BASE}/api/geofence-assignments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  geofence_id: selectedGeofence.company_id
+,
+                  vehicle_id: vehicleId,
+                  expected_entry_time: expectedTime,
+                  grace_minutes: graceMinutes,
+                }),
+              });
+
+              setShowAssign(false);
+              setVehicleId('');
+              setExpectedTime('');
+              setGraceMinutes(10);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

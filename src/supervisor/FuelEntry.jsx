@@ -5,6 +5,7 @@ export function FuelEntry() {
   const [vehicleId, setVehicleId] = useState("");
   const [fuel, setFuel] = useState("");
   const [price, setPrice] = useState(""); // UI-only
+  const [odometer, setOdometer] = useState(""); // ✅ NEW
   const [date, setDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -30,22 +31,14 @@ export function FuelEntry() {
     fetchRecentFuel();
   }, []);
 
-  useEffect(() => {
-    console.log("Vehicles in FuelEntry:", vehicles);
-  }, [vehicles]);
-
   const fetchVehicles = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/vehicles`, {
-        headers: {
-          "x-role": "SUPERVISOR",
-        },
+        headers: { "x-role": "SUPERVISOR" },
       });
-
       const data = await res.json();
       setVehicles(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Vehicle fetch failed", err);
+    } catch {
       setVehicles([]);
     }
   };
@@ -53,15 +46,11 @@ export function FuelEntry() {
   const fetchRecentFuel = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/fuel/recent`, {
-        headers: {
-          "x-role": "SUPERVISOR",
-        },
+        headers: { "x-role": "SUPERVISOR" },
       });
-
       const data = await res.json();
       setRecentEntries(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Recent fuel fetch failed", err);
+    } catch {
       setRecentEntries([]);
     }
   };
@@ -78,8 +67,8 @@ export function FuelEntry() {
   const handleSubmit = async () => {
     if (loading) return;
 
-    if (!vehicleId || !fuel) {
-      alert("Please select vehicle and enter fuel");
+    if (!vehicleId || !fuel || !odometer) {
+      alert("Please select vehicle, fuel and odometer reading");
       return;
     }
 
@@ -96,6 +85,7 @@ export function FuelEntry() {
           vehicle_id: vehicleId,
           fuel_date: date,
           fuel_quantity: Number(fuel),
+          odometer_reading: Number(odometer), // ✅ NEW
           entered_by: "supervisor-id",
         }),
       });
@@ -104,22 +94,19 @@ export function FuelEntry() {
 
       setFuel("");
       setPrice("");
+      setOdometer(""); // ✅ reset
       setVehicleId("");
       setSearch("");
       setShowList(false);
 
       fetchRecentFuel();
-    } catch (err) {
+    } catch {
       alert("Failed to save fuel entry");
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  /* =====================================
-     DERIVED DATA
-  ===================================== */
   const selectedVehicleNumber =
     vehicles.find(v => v.vehicle_id === vehicleId)?.vehicle_number || "";
 
@@ -134,9 +121,8 @@ export function FuelEntry() {
           ⛽ Record Fuel Entry
         </h2>
 
-        {/* VEHICLE SEARCH */}
+        {/* VEHICLE */}
         <label className="block text-sm mb-1">Vehicle</label>
-
         <div className="relative mb-4">
           <input
             type="text"
@@ -157,12 +143,12 @@ export function FuelEntry() {
               onMouseDown={(e) => e.preventDefault()}
             >
               {vehicles
-                .filter(v => {
-                  if (!search) return true;
-                  return v.vehicle_number
+                .filter(v =>
+                  !search ||
+                  v.vehicle_number
                     ?.toLowerCase()
-                    .includes(search.toLowerCase());
-                })
+                    .includes(search.toLowerCase())
+                )
                 .map(v => (
                   <div
                     key={v.vehicle_id}
@@ -176,15 +162,21 @@ export function FuelEntry() {
                     {v.vehicle_number}
                   </div>
                 ))}
-
-              {vehicles.length === 0 && (
-                <div className="px-3 py-2 text-sm text-gray-500">
-                  No vehicles found
-                </div>
-              )}
             </div>
           )}
         </div>
+
+        {/* ODOMETER */}
+        <label className="block text-sm mb-1">
+          Odometer Reading (km)
+        </label>
+        <input
+          type="number"
+          className="w-full border rounded-lg p-2 mb-4"
+          value={odometer}
+          onChange={(e) => setOdometer(e.target.value)}
+          placeholder="e.g. 123456"
+        />
 
         {/* FUEL */}
         <label className="block text-sm mb-1">
@@ -241,12 +233,6 @@ export function FuelEntry() {
         <h2 className="text-xl font-semibold mb-6">
           🕒 Recent Entries
         </h2>
-
-        {recentEntries.length === 0 && (
-          <p className="text-sm text-gray-500">
-            No fuel entries yet
-          </p>
-        )}
 
         {recentEntries.map((e) => (
           <div
