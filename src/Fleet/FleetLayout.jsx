@@ -44,10 +44,9 @@ export default function FleetLayout({ onLogout, user }) {
       { headers: { 'x-role': 'OWNER' } }
     )
       .then((res) => {
-  if (!res.ok) throw new Error('Failed');
-  return res.json();
-})
-
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      })
       .then((data) => setDistance(Number(data?.distance_km || 0)))
       .catch(() => setDistanceError('Unable to calculate distance'))
       .finally(() => setDistanceLoading(false));
@@ -55,7 +54,6 @@ export default function FleetLayout({ onLogout, user }) {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
-<<<<<<< HEAD
       {/* =========================
          HEADER
       ========================= */}
@@ -68,12 +66,6 @@ export default function FleetLayout({ onLogout, user }) {
         <button onClick={onLogout} className="text-sm underline">
           Logout
         </button>
-=======
-      {/* Header */}
-      <header className="bg-blue-600 text-white px-6 py-4">
-        <h1 className="text-lg font-semibold">Fleet dekha raha hu Dashboard</h1>
-        <p className="text-sm opacity-80">Live vehicle tracking</p>
->>>>>>> 4fddb3e38d07adece8afcec33e4fd12d7636ba6a
       </header>
 
       {/* =========================
@@ -109,11 +101,15 @@ export default function FleetLayout({ onLogout, user }) {
         {activeTab === 'dashboard' && (
           <div className="max-w-md mx-auto text-center mt-20 space-y-4">
             <h2 className="text-xl font-semibold">Today Distance</h2>
-{vehicle?.vehicle_number && (
-  <div className="text-sm text-gray-600">
-    Vehicle: <span className="font-semibold">{vehicle.vehicle_number}</span>
-  </div>
-)}
+
+            {vehicle?.vehicle_number && (
+              <div className="text-sm text-gray-600">
+                Vehicle:{' '}
+                <span className="font-semibold">
+                  {vehicle.vehicle_number}
+                </span>
+              </div>
+            )}
 
             {distanceLoading && <div>Calculating distance…</div>}
 
