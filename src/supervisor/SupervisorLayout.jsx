@@ -8,6 +8,9 @@ import {
   MapPin,
   LogOut,
   User,
+  Wrench,
+  UserCheck,
+  Map,
 } from 'lucide-react';
 
 import { Button } from '../components/ui/button.jsx';
@@ -21,6 +24,9 @@ import { LiveTracking } from './LiveTracking.jsx';
 import { VehicleTracking } from './VehicleTracking.jsx';
 //import { ComplaintsPanel } from './ComplaintsPanel.jsx';
 import GeofencingPage  from './GeofencingPage.jsx';
+import { Maintenance } from './Maintenance.jsx';
+import { AssignDriver } from './AssignDriver.jsx';
+import { Companyroutesmanagemnt } from './Companyroutesmanagemnt.jsx';
 
 /**
  * SupervisorLayout (TOP HEADER)
@@ -38,6 +44,9 @@ export function SupervisorLayout({ onLogout, user }) {
     { id: 'vehicle-tracking', label: 'Vehicle Tracking', icon: Truck },
   //  { id: 'complaints', label: 'Complaints', icon: AlertCircle },
     { id: 'geofencing', label: 'Geofencing', icon: MapPin },
+    { id: 'maintenance', label: 'Maintenance', icon: Wrench },
+    { id: 'assign-driver', label: 'Assign Driver', icon: UserCheck },
+    { id: 'company-routes', label: 'Company Routes', icon: Map },
   ];
 
   const renderPage = () => {
@@ -54,6 +63,12 @@ export function SupervisorLayout({ onLogout, user }) {
       //  return <ComplaintsPanel />;
       case 'geofencing':
         return <GeofencingPage />;
+      case 'maintenance':
+        return <Maintenance />;
+      case 'assign-driver':
+        return <AssignDriver />;
+      case 'company-routes':
+        return <Companyroutesmanagemnt />;
       default:
         return <SupervisorDashboard />;
     }
