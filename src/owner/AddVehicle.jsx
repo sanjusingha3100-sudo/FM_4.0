@@ -10,7 +10,14 @@ const STATES = [
   'WB','BR','OD','CG','TS','AP','KL','GA','AS','JK'
 ];
 
-export default function AddVehicle() {
+const BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5002';
+
+const API_BASE_URL = BASE_URL.endsWith('/api')
+  ? BASE_URL
+  : `${BASE_URL}/api`;
+
+export default function AddVehicle({ owner }) {
   const [form, setForm] = useState({
     vehicle_number: '',
     vehicle_type: '',
@@ -27,18 +34,44 @@ export default function AddVehicle() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
+  /* =========================
+     HANDLE CHANGE (SMART)
+  ========================= */
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value.toUpperCase() });
+    const { name, value } = e.target;
+
+    // only vehicle number & state uppercase
+    if (name === 'vehicle_number' || name === 'registration_state') {
+      setForm({ ...form, [name]: value.toUpperCase() });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
+  /* =========================
+     SUBMIT
+  ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
 
+    if (!form.vehicle_type) {
+      setMessage('❌ Vehicle type is required');
+      setLoading(false);
+      return;
+    }
+
+    if (!owner?.owner_id) {
+      setMessage('❌ Owner not found. Please re-login.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         ...form,
+        owner_id: owner.owner_id, // 🔥 REQUIRED
         manufacturing_year: form.manufacturing_year
           ? Number(form.manufacturing_year)
           : null,
@@ -47,14 +80,21 @@ export default function AddVehicle() {
           : null,
       };
 
-      const res = await fetch('http://localhost:5002/api/vehicles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+     
+
+      const res = await fetch(`${API_BASE_URL}/vehicles`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-role': 'OWNER',
+    'x-owner-id': owner.owner_id, // ✅ REQUIRED
+  },
+  body: JSON.stringify(payload),
+});
+
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
+      if (!res.ok) throw new Error(data.error || 'Failed to add vehicle');
 
       setMessage('✅ Vehicle added successfully');
 
@@ -94,7 +134,7 @@ export default function AddVehicle() {
           <div className="grid grid-cols-2 gap-4">
             <input
               name="vehicle_number"
-              placeholder="Vehicle No (MH12AB1234) – optional"
+              placeholder="Vehicle No (MH12AB1234)"
               value={form.vehicle_number}
               onChange={handleChange}
               className="input"
@@ -110,11 +150,12 @@ export default function AddVehicle() {
               <option value="">Select Vehicle Type</option>
               <option value="BUS">Bus</option>
               <option value="CAB">Cab</option>
+              <option value="TRUCK">Truck</option>
             </select>
 
             <input
               name="manufacturer"
-              placeholder="Manufacturer (optional)"
+              placeholder="Manufacturer"
               value={form.manufacturer}
               onChange={handleChange}
               className="input"
@@ -122,7 +163,7 @@ export default function AddVehicle() {
 
             <input
               name="model"
-              placeholder="Model (optional)"
+              placeholder="Model"
               value={form.model}
               onChange={handleChange}
               className="input"
@@ -194,7 +235,7 @@ export default function AddVehicle() {
           <div className="grid grid-cols-2 gap-4">
             <input
               name="gps_provider"
-              placeholder="GPS Provider (optional)"
+              placeholder="GPS Provider"
               value={form.gps_provider}
               onChange={handleChange}
               className="input"
@@ -202,7 +243,7 @@ export default function AddVehicle() {
 
             <input
               name="gps_device_id"
-              placeholder="GPS Device ID / IMEI (optional)"
+              placeholder="GPS Device ID / IMEI"
               value={form.gps_device_id}
               onChange={handleChange}
               className="input"

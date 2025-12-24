@@ -1,69 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginPage } from './components/pages/LoginPage.jsx';
 
-/* =========================
-   LAYOUTS
-========================= */
 import { OwnerLayout } from './owner/OwnerLayout.jsx';
 import { SupervisorLayout } from './supervisor/SupervisorLayout.jsx';
 import FleetLayout from './Fleet/FleetLayout.jsx';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // dev mode
+  const [userRole, setUserRole] = useState('OWNER');
   const [user, setUser] = useState(null);
 
-  const handleLogin = (role, userData = null) => {
-    setUserRole(role);
-    setUser(userData);
-    setIsLoggedIn(true);
-  };
+  /* =========================
+     SET USER BASED ON ROLE
+  ========================= */
+  useEffect(() => {
+    if (userRole === 'OWNER') {
+      const owner = {
+        owner_id: '204ef1b2-a937-442e-abd0-b9a75110c7ec',
+        owner_name: 'Azad',
+      };
+      localStorage.setItem('owner', JSON.stringify(owner));
+      setUser(owner);
+    }
+
+    if (userRole === 'SUPERVISOR') {
+      setUser({
+        supervisor_id: '22222222-2222-2222-2222-222222222222',
+      });
+    }
+
+    if (userRole === 'FLEET') {
+      setUser({
+        fleet_id: '11111111-1111-1111-1111-111111111111',
+      });
+    }
+  }, [userRole]);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setUserRole(null);
     setUser(null);
+    setUserRole(null);
+    localStorage.removeItem('owner');
   };
 
   if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
+    return <LoginPage onLogin={() => {}} />;
   }
 
-  /* =========================
-     OWNER
-  ========================= */
-  if (userRole === 'OWNER') {
-    return (
-      <OwnerLayout
-        onLogout={handleLogout}
-        user={user}
-      />
-    );
-  }
+  return (
+    <>
+      {/* =========================
+         DEV ROLE SWITCH (TEMP)
+      ========================= */}
+      <div
+        style={{
+          padding: 10,
+          display: 'flex',
+          gap: 10,
+          background: '#eee',
+          borderBottom: '1px solid #ccc',
+        }}
+      >
+        <button onClick={() => setUserRole('OWNER')}>OWNER</button>
+        <button onClick={() => setUserRole('SUPERVISOR')}>SUPERVISOR</button>
+        <button onClick={() => setUserRole('FLEET')}>FLEET</button>
+      </div>
 
-  /* =========================
-     SUPERVISOR
-  ========================= */
-  if (userRole === 'SUPERVISOR') {
-    return (
-      <SupervisorLayout
-        onLogout={handleLogout}
-        user={user}
-      />
-    );
-  }
+      {/* =========================
+         EXACTLY ONE PORTAL OPENS
+      ========================= */}
+      {userRole === 'OWNER' && (
+        <OwnerLayout onLogout={handleLogout} user={user} />
+      )}
 
-  /* =========================
-     FLEET
-  ========================= */
-  if (userRole === 'FLEET') {
-    return (
-      <FleetLayout
-        onLogout={handleLogout}
-        user={user}
-      />
-    );
-  }
+      {userRole === 'SUPERVISOR' && (
+        <SupervisorLayout onLogout={handleLogout} user={user} />
+      )}
 
-  return null;
+      {userRole === 'FLEET' && (
+        <FleetLayout onLogout={handleLogout} user={user} />
+      )}
+    </>
+  );
 }

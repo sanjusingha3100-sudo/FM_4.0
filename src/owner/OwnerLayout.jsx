@@ -69,8 +69,10 @@ export function OwnerLayout({ onLogout, user }) {
         //return <Penalties />;
       case 'settings':
         return <Settings />;
-        case 'addvehicle':
-        return <AddVehicle/>;
+        
+       case 'addvehicle':
+  return <AddVehicle owner={user} />;
+
       case 'dashboard':
       default:
         return <OwnerDashboard />;

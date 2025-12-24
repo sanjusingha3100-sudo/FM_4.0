@@ -23,6 +23,8 @@ const autoCenterRef = useRef(true);
   const [showPopup, setShowPopup] = useState(false);
   const [mapError, setMapError] = useState('');
 
+
+
   /* =========================
      INIT MAP
   ========================= */
@@ -85,6 +87,31 @@ useEffect(() => {
     }
   }, [vehicles, statusFilter]);
 
+
+useEffect(() => {
+  vehicles.forEach((v) => {
+    fetch(
+      `${API_BASE_URL}/supervisor/vehicle-distance?vehicle_id=${v.id}`,
+      {
+        headers: {
+          'x-role': 'SUPERVISOR'
+        }
+      }
+    )
+      .then(res => res.json())
+      .then(data => {
+        setVehicles(prev =>
+          prev.map(p =>
+            p.id === v.id
+              ? { ...p, distance_km: data.distance_km }
+              : p
+          )
+        );
+      });
+  });
+}, [vehicles.length]);
+
+
   /* =========================
      UPDATE MARKERS AND BOUNDS
   ========================= */
@@ -118,8 +145,8 @@ useEffect(() => {
         }
 
         hasValidVehicles = true;
-        bounds.push([v.lng, v.lat]); // Mappls may expect [lng, lat] for bounds
-        console.log('Added to bounds:', [v.lng, v.lat]);
+        bounds.push([v.lat, v.lng]); // Mappls may expect [lng, lat] for bounds
+        console.log('Added to bounds:', [v.lat, v.lng]);
 
         const color =
           v.status === 'moving'

@@ -12,12 +12,41 @@ export default function FleetMap({ user }) {
   const markerRef = useRef(null);
   const watchIdRef = useRef(null);
   const lastSentRef = useRef(0);
+  const hasInitialZoomRef = useRef(false);
 
   const [error, setError] = useState('');
+  const [initialLocation, setInitialLocation] = useState(null);
 
+  /* =========================
+     TRY FETCH LAST DB LOCATION
+  ========================= */
+  useEffect(() => {
+    if (!user?.vehicle_id) return;
+
+    fetch(`${API_BASE_URL}/fleet/last-location/${user.vehicle_id}`, {
+      headers: {
+        'x-role': 'FLEET',
+        'x-vehicle-id': user.vehicle_id,
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.latitude && data?.longitude) {
+          setInitialLocation({
+            lat: data.latitude,
+            lng: data.longitude,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
+  /* =========================
+     INIT MAP + GPS
+  ========================= */
   useEffect(() => {
     if (!window.mappls) {
-      setError('Mappls SDK not loaded');
+      setError('MapmyIndia SDK not loaded');
       return;
     }
 
@@ -26,80 +55,83 @@ export default function FleetMap({ user }) {
       return;
     }
 
-    // 🔹 INIT MAP
-    const map = new window.mappls.Map('fleet-map', {
-      center: [28.6139, 77.209],
-      zoom: 16,
+    if (mapRef.current) return;
+
+    requestAnimationFrame(() => {
+      const container = document.getElementById('fleet-map');
+      if (!container || mapRef.current) return;
+
+      // 🔥 FALLBACK CENTER (India)
+      const fallback = initialLocation || { lat: 28.6139, lng: 77.2090 };
+
+      const map = new window.mappls.Map(container, {
+        center: [fallback.lat, fallback.lng],
+        zoom: initialLocation ? 18 : 6,
+      });
+
+      mapRef.current = map;
+
+      markerRef.current = new window.mappls.Marker({
+        map,
+        position: fallback,
+      });
+
+      // 🌍 LIVE GPS
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          const { latitude, longitude, speed } = pos.coords;
+
+          if (
+            latitude == null ||
+            longitude == null ||
+            latitude === 0 ||
+            longitude === 0
+          ) return;
+
+          markerRef.current?.setPosition({ lat: latitude, lng: longitude });
+
+          if (!hasInitialZoomRef.current) {
+            map.setCenter([latitude, longitude]);
+            map.setZoom(18);
+            hasInitialZoomRef.current = true;
+          }
+
+          if (!user?.vehicle_id) return;
+
+          const now = Date.now();
+          if (now - lastSentRef.current > 5000) {
+            lastSentRef.current = now;
+
+            fetch(`${API_BASE_URL}/fleet/location`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-role': 'FLEET',
+                'x-vehicle-id': user.vehicle_id,
+              },
+              body: JSON.stringify({
+                latitude,
+                longitude,
+                speed: speed || 0,
+                ignition: true,
+              }),
+            }).catch(() => {});
+          }
+        },
+        () => setError('Unable to fetch GPS location'),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
     });
-
-    mapRef.current = map;
-
-    // 🔹 CREATE MARKER
-    markerRef.current = new window.mappls.Marker({
-      map,
-      position: { lat: 28.6139, lng: 77.209 },
-    });
-
-    // 🔹 WATCH GPS
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude, speed } = pos.coords;
-
-        // Move marker
-        markerRef.current.setPosition({
-          lat: latitude,
-          lng: longitude,
-        });
-
-        map.setCenter([latitude, longitude]);
-
-        // 🔥 SEND GPS (every 5 sec)
-        const now = Date.now();
-        if (!user?.vehicle_id) return;
-
-        if (now - lastSentRef.current > 5000) {
-          lastSentRef.current = now;
-
-          fetch(`${API_BASE_URL}/fleet/location`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-role': 'FLEET',
-              'x-vehicle-id': user.vehicle_id,
-            },
-            body: JSON.stringify({
-              latitude,
-              longitude,
-              speed: speed || 0,
-              ignition: true,
-            }),
-          }).catch(() => {});
-        }
-      },
-      (err) => {
-        console.error(err);
-        setError('Unable to fetch GPS location');
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 5000,
-      }
-    );
 
     return () => {
-      if (watchIdRef.current) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
+      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      markerRef.current?.remove();
+      mapRef.current = null;
     };
-  }, [user]);
+  }, [initialLocation, user]);
 
   if (error) {
-    return (
-      <div className="text-center mt-10 text-red-600">
-        {error}
-      </div>
-    );
+    return <div className="text-center mt-10 text-red-600">{error}</div>;
   }
 
   return (
@@ -109,6 +141,7 @@ export default function FleetMap({ user }) {
         height: '500px',
         width: '100%',
         borderRadius: '8px',
+        overflow: 'hidden',
       }}
     />
   );

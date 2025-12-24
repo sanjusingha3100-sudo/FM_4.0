@@ -35,7 +35,7 @@ export function AssignDriver() {
 
   const fetchVehicles = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/assign-driver/vehicles`, {
+      const res = await fetch(`${API_BASE_URL}/vehicles`, {
         headers: { "x-role": "SUPERVISOR" },
       });
       const data = await res.json();

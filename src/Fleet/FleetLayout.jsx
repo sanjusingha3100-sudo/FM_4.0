@@ -14,6 +14,7 @@ export default function FleetLayout({ onLogout, user }) {
   const [distanceLoading, setDistanceLoading] = useState(false);
   const [distanceError, setDistanceError] = useState('');
 
+
   /* =========================
      RESTORE VEHICLE
   ========================= */
@@ -26,31 +27,62 @@ export default function FleetLayout({ onLogout, user }) {
     }
   }, []);
 
+
+  
   /* =========================
      FETCH DISTANCE
   ========================= */
-  useEffect(() => {
-    if (!vehicle?.vehicle_id) return;
+/* =========================
+   FETCH DISTANCE (AUTO REFRESH)
+========================= */
+useEffect(() => {
+  if (!vehicle?.vehicle_id) return;
 
-    const start = new Date();
-    start.setUTCHours(0, 0, 0, 0);
-    const end = new Date();
+  let isMounted = true;
 
-    setDistanceLoading(true);
-    setDistanceError('');
+  const fetchDistance = async () => {
+    try {
+      setDistanceLoading(true);
+      setDistanceError('');
 
-    fetch(
-      `${API_BASE_URL}/fleet/distance?vehicle_id=${vehicle.vehicle_id}&start=${start.toISOString()}&end=${end.toISOString()}`,
-      { headers: { 'x-role': 'OWNER' } }
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed');
-        return res.json();
-      })
-      .then((data) => setDistance(Number(data?.distance_km || 0)))
-      .catch(() => setDistanceError('Unable to calculate distance'))
-      .finally(() => setDistanceLoading(false));
-  }, [vehicle]);
+      const res = await fetch(
+        `${API_BASE_URL}/fleet/distance-today?vehicle_id=${vehicle.vehicle_id}`,
+        {
+          headers: {
+            'x-role': 'FLEET',
+            'x-vehicle-id': vehicle.vehicle_id,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error('Failed');
+
+      const data = await res.json();
+      if (isMounted) {
+        setDistance(Number(data?.distance_km || 0));
+      }
+    } catch {
+      if (isMounted) {
+        setDistanceError('Unable to calculate distance');
+      }
+    } finally {
+      if (isMounted) {
+        setDistanceLoading(false);
+      }
+    }
+  };
+
+  // ⏱ fetch immediately
+  fetchDistance();
+
+  // 🔁 refresh every 30 seconds
+  const interval = setInterval(fetchDistance, 30000);
+
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
+}, [vehicle]);
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">

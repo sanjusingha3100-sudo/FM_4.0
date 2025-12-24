@@ -54,7 +54,7 @@ export function Companyroutesmanagemnt() {
 
   const fetchCompanies = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/company-routes/companies`);
+      const res = await fetch(`${API_BASE_URL}/companies`);
       if (!res.ok) throw new Error("Failed to fetch companies");
       const data = await res.json();
       setCompanies(data);
@@ -65,7 +65,7 @@ export function Companyroutesmanagemnt() {
 
   const fetchVehicles = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/company-routes/vehicles`);
+      const res = await fetch(`${API_BASE_URL}/vehicles`);
       if (!res.ok) throw new Error("Failed to fetch vehicles");
       const data = await res.json();
       setVehicles(data);
