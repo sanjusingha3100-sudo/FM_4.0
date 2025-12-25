@@ -78,12 +78,7 @@ export default function VehicleMap({ vehicles = [] }) {
   return (
     <div
       id="vehicle-map"
-      style={{
-        width: '100%',
-        height: '500px',
-        borderRadius: '8px',
-        overflow: 'hidden',
-      }}
+      className="w-full h-[60svh] min-h-[360px] max-h-[650px] rounded-lg overflow-hidden border border-slate-200 bg-white"
     />
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getLatestTelemetry } from '../services/api.js';
-import { MapPin, Car, Clock, Phone, Wrench, Activity, Eye, EyeOff } from 'lucide-react';
+import { MapPin, Car, Clock, Wrench, Activity, Eye, EyeOff } from 'lucide-react';
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5002";
 const API_BASE_URL = BASE_URL.endsWith("/api") ? BASE_URL : `${BASE_URL}/api`;
@@ -329,286 +329,332 @@ useEffect(() => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative">
+    <div className="flex flex-col min-h-0 w-full">
       {/* ================= STATUS DASHBOARD ================= */}
-      <div className="bg-white border-b shadow-sm p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <h2 className="text-lg font-semibold text-gray-800">Live Vehicle Tracking</h2>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                All ({statusCounts.total})
-              </button>
-              
-              <button
-                onClick={() => setStatusFilter('moving')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'moving'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Moving ({statusCounts.moving})
-              </button>
-              <button
-                onClick={() => setStatusFilter('idling')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'idling'
-                    ? 'bg-yellow-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Idling ({statusCounts.idling})
-              </button>
-              <button
-                onClick={() => setStatusFilter('stopped')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'stopped'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Stopped ({statusCounts.stopped})
-              </button>
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="p-4 sm:p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold tracking-tight text-slate-900 truncate">
+                  Live Vehicle Tracking
+                </h2>
+                <p className="text-xs text-slate-500">Real-time location and status</p>
+              </div>
+              <div className="text-xs text-slate-500 shrink-0 lg:hidden tabular-nums">
+                Last updated: {new Date().toLocaleTimeString()}
+              </div>
             </div>
-          </div>
-          <div className="text-sm text-gray-600">
-            Last updated: {new Date().toLocaleTimeString()}
-          </div>
-        </div>
-      </div>
 
-      {/* ================= MAIN CONTENT ================= */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* ================= MAP ================= */}
-        <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-
-          {mapError ? (
-            <div className="h-full w-full flex items-center justify-center bg-gray-100">
-              <div className="text-center">
-                <div className="text-red-600 text-lg font-semibold mb-2">Map Error</div>
-                <div className="text-gray-600 mb-4">{mapError}</div>
+            <div className="overflow-x-auto">
+              <div className="flex gap-2 min-w-max">
                 <button
-                  onClick={() => window.location.reload()}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  type="button"
+                  aria-pressed={statusFilter === 'all'}
+                  onClick={() => setStatusFilter('all')}
+                  className={`inline-flex items-center justify-center h-11 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                    statusFilter === 'all'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
                 >
-                  Refresh Page
+                  All ({statusCounts.total})
+                </button>
+
+                <button
+                  type="button"
+                  aria-pressed={statusFilter === 'moving'}
+                  onClick={() => setStatusFilter('moving')}
+                  className={`inline-flex items-center justify-center h-11 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                    statusFilter === 'moving'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Moving ({statusCounts.moving})
+                </button>
+
+                <button
+                  type="button"
+                  aria-pressed={statusFilter === 'idling'}
+                  onClick={() => setStatusFilter('idling')}
+                  className={`inline-flex items-center justify-center h-11 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-2 ${
+                    statusFilter === 'idling'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Idling ({statusCounts.idling})
+                </button>
+
+                <button
+                  type="button"
+                  aria-pressed={statusFilter === 'stopped'}
+                  onClick={() => setStatusFilter('stopped')}
+                  className={`inline-flex items-center justify-center h-11 px-4 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 ${
+                    statusFilter === 'stopped'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Stopped ({statusCounts.stopped})
                 </button>
               </div>
             </div>
-          ) : (
-            <div
-              ref={mapRef}
-              id="live-tracking-map"
-              className="h-full w-full"
-              style={{ minHeight: '400px' }}
-            />
-          )}
 
-          {/* Map Legend - only show if no error */}
-          {!mapError && (
-            <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg">
-              <h4 className="text-sm font-medium mb-2">Legend</h4>
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded"></div>
-                  <span>Moving</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-                  <span>Idling</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded"></div>
-                  <span>Stopped</span>
+            <div className="hidden lg:block text-xs text-slate-500 shrink-0 tabular-nums">
+              Last updated: {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= MAIN CONTENT ================= */}
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 mt-4">
+        {/* ================= MAP ================= */}
+        <section className="relative flex flex-col min-h-0 flex-1">
+          <div className="relative rounded-xl border border-slate-200 bg-white overflow-hidden">
+            {mapError ? (
+              <div className="w-full h-[55svh] min-h-[320px] sm:h-[60svh] lg:h-[70svh] max-h-[760px] flex items-center justify-center bg-slate-50">
+                <div className="text-center px-6">
+                  <div className="text-red-700 text-base font-semibold mb-2">Map Error</div>
+                  <div className="text-sm text-slate-600 mb-4">{mapError}</div>
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="inline-flex items-center justify-center h-11 px-4 rounded-md bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  >
+                    Refresh Page
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div
+                ref={mapRef}
+                id="live-tracking-map"
+                className="w-full h-[55svh] min-h-[320px] sm:h-[60svh] lg:h-[70svh] max-h-[760px]"
+              />
+            )}
+
+            {/* Map Legend - only show if no error */}
+            {!mapError && (
+              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white/95 backdrop-blur p-3 rounded-lg shadow-lg border border-slate-200">
+                <h4 className="text-sm font-medium text-slate-900 mb-2">Legend</h4>
+                <div className="space-y-1 text-xs text-slate-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-emerald-500 rounded"></div>
+                    <span>Moving</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-amber-500 rounded"></div>
+                    <span>Idling</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded"></div>
+                    <span>Stopped</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* ================= RIGHT SIDEBAR ================= */}
-        <div className="w-80 bg-white border-l shadow-lg overflow-y-auto">
-          <div className="p-4 border-b bg-gray-50">
-            <h3 className="font-semibold text-gray-800">
-              Vehicles ({filteredVehicles.length})
-            </h3>
+        <aside className="w-full lg:w-80 lg:shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm lg:h-[70svh] lg:max-h-[760px] overflow-visible lg:overflow-y-auto">
+          <div className="p-4 border-b border-slate-200 bg-slate-50/80 backdrop-blur sticky top-0 z-10">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-wide text-slate-500">Vehicles</p>
+                <p className="text-sm font-semibold text-slate-900 tabular-nums">
+                  {filteredVehicles.length}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="divide-y">
+          <div className="divide-y divide-slate-200">
             {filteredVehicles.map((vehicle) => (
-              <div
+              <button
                 key={vehicle.id}
+                type="button"
                 onClick={() => handleVehicleClick(vehicle)}
-                className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedVehicle?.id === vehicle.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                className={`w-full text-left p-4 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                  selectedVehicle?.id === vehicle.id
+                    ? 'bg-blue-50 ring-1 ring-inset ring-blue-200'
+                    : ''
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Car size={16} className="text-gray-600" />
-                    <span className="font-medium text-gray-800">{vehicle.number}</span>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Car size={16} className="text-slate-600 shrink-0" />
+                    <span className="font-medium text-slate-900 truncate">{vehicle.number}</span>
                   </div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    vehicle.status === 'moving'
-                      ? 'bg-green-100 text-green-800'
-                      : vehicle.status === 'idling'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <div
+                    className={`shrink-0 px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                      vehicle.status === 'moving'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : vehicle.status === 'idling'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
                     {vehicle.status}
                   </div>
                 </div>
 
-                <div className="space-y-1 text-sm text-gray-600">
+                <div className="space-y-1 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
-                    <Activity size={14} />
-                    <span>{vehicle.speed} km/h</span>
+                    <Activity size={14} className="text-slate-500" />
+                    <span className="tabular-nums">{vehicle.speed} km/h</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <MapPin size={14} />
-                    <span>{vehicle.lat?.toFixed(4)}, {vehicle.lng?.toFixed(4)}</span>
+                    <MapPin size={14} className="text-slate-500" />
+                    <span className="tabular-nums">
+                      {vehicle.lat?.toFixed(4)}, {vehicle.lng?.toFixed(4)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock size={14} />
-                    <span>Today: {vehicle.today_km} km</span>
+                    <Clock size={14} className="text-slate-500" />
+                    <span className="tabular-nums">Today: {vehicle.today_km} km</span>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
           {filteredVehicles.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-10 text-center text-slate-500">
               <Car size={48} className="mx-auto mb-4 opacity-50" />
-              <p>No vehicles found</p>
-              <p className="text-sm">Try changing the status filter</p>
+              <p className="text-sm font-medium text-slate-700">No vehicles found</p>
+              <p className="text-sm text-slate-500">Try changing the status filter</p>
             </div>
           )}
-        </div>
+        </aside>
       </div>
 
       {/* ================= VEHICLE DETAIL POPUP ================= */}
       {showPopup && selectedVehicle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Car size={20} />
-                  {selectedVehicle.number}
-                </h3>
+        <div className="fixed inset-0 bg-black/50 z-50 p-4 overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="mx-auto my-8 bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full max-h-[90svh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium uppercase tracking-wide text-slate-500">Vehicle</p>
+                  <h3 className="text-xl font-semibold tracking-tight text-slate-900 flex items-center gap-2 truncate">
+                    <Car size={20} className="shrink-0" />
+                    {selectedVehicle.number}
+                  </h3>
+                </div>
                 <button
+                  type="button"
                   onClick={() => setShowPopup(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="inline-flex items-center justify-center h-11 w-11 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  aria-label="Close"
                 >
                   ✕
                 </button>
               </div>
 
               <div className="space-y-4">
-                {/* Status */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Status</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    selectedVehicle.status === 'moving'
-                      ? 'bg-green-100 text-green-800'
-                      : selectedVehicle.status === 'idling'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {selectedVehicle.status}
-                  </span>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-slate-600">Status</span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                          selectedVehicle.status === 'moving'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : selectedVehicle.status === 'idling'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {selectedVehicle.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-slate-600">Current Speed</span>
+                      <span className="text-sm font-medium text-slate-900 tabular-nums">
+                        {selectedVehicle.speed} km/h
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-slate-600">Distance Today</span>
+                      <span className="text-sm font-medium text-slate-900 tabular-nums">
+                        {selectedVehicle.today_km} km
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-slate-600">Total Distance</span>
+                      <span className="text-sm font-medium text-slate-900 tabular-nums">
+                        {selectedVehicle.total_km} km
+                      </span>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-sm text-slate-600">Current Location</span>
+                      <span className="text-sm font-medium text-slate-900 text-right tabular-nums">
+                        {selectedVehicle.lat?.toFixed(4)},<br />
+                        {selectedVehicle.lng?.toFixed(4)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Speed */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Current Speed</span>
-                  <span className="font-medium">{selectedVehicle.speed} km/h</span>
-                </div>
-
-                {/* Distance Today */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Distance Today</span>
-                  <span className="font-medium">{selectedVehicle.today_km} km</span>
-                </div>
-
-                {/* Total Distance */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total Distance</span>
-                  <span className="font-medium">{selectedVehicle.total_km} km</span>
-                </div>
-
-                {/* Current Location */}
-                <div className="flex items-start justify-between">
-                  <span className="text-sm text-gray-600">Current Location</span>
-                  <span className="font-medium text-right">
-                    {selectedVehicle.lat?.toFixed(4)},<br />
-                    {selectedVehicle.lng?.toFixed(4)}
-                  </span>
-                </div>
-
-                {/* Driver Info */}
                 {vehicleDetails?.driver && (
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
-                      <Eye size={16} />
+                  <div className="border-t border-slate-200 pt-4">
+                    <h4 className="text-sm font-medium uppercase tracking-wide text-slate-500 mb-3 flex items-center gap-2">
+                      <Eye size={16} className="text-slate-500" />
                       Driver Information
                     </h4>
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Name</span>
-                        <span className="font-medium">{vehicleDetails.driver.driver_name}</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-600">Name</span>
+                        <span className="font-medium text-slate-900">{vehicleDetails.driver.driver_name}</span>
                       </div>
                       {vehicleDetails.driver.phone_number && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Phone</span>
-                          <span className="font-medium">{vehicleDetails.driver.phone_number}</span>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-slate-600">Phone</span>
+                          <span className="font-medium text-slate-900 tabular-nums">{vehicleDetails.driver.phone_number}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Last Maintenance */}
                 {vehicleDetails?.lastMaintenance && (
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
-                      <Wrench size={16} />
+                  <div className="border-t border-slate-200 pt-4">
+                    <h4 className="text-sm font-medium uppercase tracking-wide text-slate-500 mb-3 flex items-center gap-2">
+                      <Wrench size={16} className="text-slate-500" />
                       Last Maintenance
                     </h4>
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Type</span>
-                        <span className="font-medium">{vehicleDetails.lastMaintenance.maintenance_type}</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-600">Type</span>
+                        <span className="font-medium text-slate-900">{vehicleDetails.lastMaintenance.maintenance_type}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Date</span>
-                        <span className="font-medium">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-600">Date</span>
+                        <span className="font-medium text-slate-900 tabular-nums">
                           {new Date(vehicleDetails.lastMaintenance.service_date).toLocaleDateString()}
                         </span>
                       </div>
                       {vehicleDetails.lastMaintenance.category && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Category</span>
-                          <span className="font-medium">{vehicleDetails.lastMaintenance.category}</span>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-slate-600">Category</span>
+                          <span className="font-medium text-slate-900">{vehicleDetails.lastMaintenance.category}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* No Driver/Maintenance Info */}
                 {(!vehicleDetails?.driver || !vehicleDetails?.lastMaintenance) && (
-                  <div className="border-t pt-4">
-                    <div className="text-sm text-gray-500 space-y-2">
+                  <div className="border-t border-slate-200 pt-4">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 space-y-2">
                       {!vehicleDetails?.driver && (
                         <p className="flex items-center gap-2">
                           <EyeOff size={14} />

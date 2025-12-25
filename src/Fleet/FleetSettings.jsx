@@ -54,10 +54,15 @@ export default function FleetSettings({ onVehicleAssigned }) {
 
   return (
     <div className="max-w-sm mx-auto space-y-4">
-      <h2 className="text-lg font-semibold">Assign Vehicle</h2>
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold">Assign Vehicle</h2>
+        <p className="text-sm text-slate-600">
+          Enter your assigned vehicle number to enable live tracking.
+        </p>
+      </div>
 
       <input
-        className="border p-2 w-full rounded"
+        className="w-full h-11 rounded-md border border-slate-300 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         placeholder="Vehicle Number (HR55AN2175)"
         value={vehicleNumber}
         onChange={(e) => setVehicleNumber(e.target.value)}
@@ -72,7 +77,7 @@ export default function FleetSettings({ onVehicleAssigned }) {
       <button
         onClick={submit}
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 rounded"
+        className="w-full h-11 rounded-md bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
       >
         {loading ? 'Saving...' : 'Save Vehicle'}
       </button>

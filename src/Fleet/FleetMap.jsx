@@ -139,7 +139,7 @@ export default function FleetMap({ user }) {
 
   if (error) {
     return (
-      <div className="text-center mt-10 text-red-600">
+      <div className="w-full rounded-lg border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">
         {error}
       </div>
     );
@@ -148,12 +148,7 @@ export default function FleetMap({ user }) {
   return (
     <div
       id="fleet-map"
-      style={{
-        height: '500px',
-        width: '100%',
-        borderRadius: '8px',
-        overflow: 'hidden',
-      }}
+      className="w-full h-[60svh] min-h-[360px] max-h-[650px] rounded-lg overflow-hidden border border-slate-200 bg-white"
     />
   );
 }
