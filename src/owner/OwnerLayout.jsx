@@ -75,7 +75,7 @@ export function OwnerLayout({ onLogout, user }) {
 
       case 'dashboard':
       default:
-        return <OwnerDashboard />;
+        return < AddVehicle/>;
     }
   };
 

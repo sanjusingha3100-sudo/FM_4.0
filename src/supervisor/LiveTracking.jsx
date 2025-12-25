@@ -92,18 +92,14 @@ useEffect(() => {
   vehicles.forEach((v) => {
     fetch(
       `${API_BASE_URL}/supervisor/vehicle-distance?vehicle_id=${v.id}`,
-      {
-        headers: {
-          'x-role': 'SUPERVISOR'
-        }
-      }
+      { headers: { 'x-role': 'SUPERVISOR' } }
     )
       .then(res => res.json())
       .then(data => {
         setVehicles(prev =>
           prev.map(p =>
             p.id === v.id
-              ? { ...p, distance_km: data.distance_km }
+              ? { ...p, today_km: data.distance_km }
               : p
           )
         );

@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 
 import api from '../services/api.js';
+const BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
 export default function OwnerDashboard() {
   const [stats, setStats] = useState(null);
